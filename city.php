@@ -26,14 +26,20 @@ if (!empty($filename)) {
 
     $stats = [];
     foreach ($results as $result) {
-        if ($result['parameter'] !== 'pm25') continue;
+        if ($result['parameter'] !== 'pm25' && $result['parameter'] !== 'pm10') continue;
+        if ($result['value'] < 0) continue;
 
         $month = substr($result['date']['local'], 0, 7);
         if (!isset($stats[$month])) {
-            $stats[$month] = [];
+            $stats[$month] = [
+                'pm25' => [],
+                'pm10' => []
+            ];
         }
-        $stats[$month][] = $result['value'];
+        
+        $stats[$month][$result['parameter']][] = $result['value'];
     }
+    // var_dump($stats);
 }
 ?>
 
@@ -43,12 +49,22 @@ if (!empty($filename)) {
 <?php else: ?>
     <?php if (!empty($stats)): ?>
         <table>
-            <?php foreach ($stats as $month => $measurements): ?>
+            <thead>
                 <tr>
-                    <th><?= escape($month) ?></th>
-                    <td><?= escape(array_sum($measurements) / count($measurements)) ?></td>
+                    <th>Month</th>
+                    <th>PM2.5 concentration</th>
+                    <th>PM10 concentration</th>
                 </tr>
-            <?php endforeach; ?>
+            </thead>
+            <tbody>
+                <?php foreach ($stats as $month => $measurements): ?>
+                    <tr>
+                        <th><?= escape($month) ?></th>
+                        <td><?= escape(array_sum($measurements['pm25']) / count($measurements['pm25'])) ?></td>
+                        <td><?= escape(array_sum($measurements['pm10']) / count($measurements['pm10'])) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
         </table>
     <?php endif; ?>
 <?php endif; ?>
