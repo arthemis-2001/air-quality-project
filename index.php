@@ -1,8 +1,9 @@
-<?php require __DIR__ . '/inc/functions.inc.php'; ?>
-
 <?php 
+
+require __DIR__ . '/inc/functions.inc.php';
 $contents = file_get_contents(__DIR__ . '/data/index.json');
 $cities = json_decode($contents, true);
+
 ?>
 
 <?php require __DIR__ . '/views/header.inc.php'; ?>
