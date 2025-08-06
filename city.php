@@ -7,12 +7,14 @@ if (!empty($_GET['city'])) {
 }
 
 $filename = null;
+$cityInformation = [];
 if (!empty($city)) {
     $contents = file_get_contents(__DIR__ . '/data/index.json');
     $cities = json_decode($contents, true);
     foreach ($cities as $currentCity) {
         if ($currentCity['city'] === $city) {
             $filename = $currentCity['filename'];
+            $cityInformation = $currentCity;
             break;
         }
     }
@@ -23,6 +25,21 @@ if (!empty($filename)) {
         file_get_contents('compress.bzip2://' . __DIR__ . '/data/' . $filename),
         true
     )['results'];
+
+    $units = [
+        'pm25' => null,
+        'pm10' => null
+    ];
+
+    foreach ($results as $result) {
+        if (!empty($units['pm25']) && !empty($units['pm10'])) break;
+        if ($result['parameter'] === 'pm25') {
+            $units['pm25'] = $result['unit'];
+        }
+        if ($result['parameter'] === 'pm10') {
+            $units['pm10'] = $result['unit'];
+        }
+    }
 
     $stats = [];
     foreach ($results as $result) {
@@ -48,6 +65,8 @@ if (!empty($filename)) {
     <p>City could not be loaded.</p>
 <?php else: ?>
     <?php if (!empty($stats)): ?>
+        <h1><?= escape($cityInformation['city']) ?> <?= escape($cityInformation['flag']) ?></h1>
+        <h2><?= escape($cityInformation['country']) ?></h2>
         <table>
             <thead>
                 <tr>
@@ -60,8 +79,14 @@ if (!empty($filename)) {
                 <?php foreach ($stats as $month => $measurements): ?>
                     <tr>
                         <th><?= escape($month) ?></th>
-                        <td><?= escape(array_sum($measurements['pm25']) / count($measurements['pm25'])) ?></td>
-                        <td><?= escape(array_sum($measurements['pm10']) / count($measurements['pm10'])) ?></td>
+                        <td>
+                            <?= escape(round(array_sum($measurements['pm25']) / count($measurements['pm25']), 2)) ?>
+                            <?= escape($units['pm25']) ?>
+                        </td>
+                        <td>
+                            <?= escape(round(array_sum($measurements['pm10']) / count($measurements['pm10']), 2)) ?>
+                            <?= escape($units['pm10']) ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
